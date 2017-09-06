@@ -1,0 +1,43 @@
+[root@dhcp207 sqlite_test]# ./sqlite_test 10
+NINSERT: 10
+Opened "filehandle.db" successfully.
+Table created successfully
+Total time for inserting 10 records: 0.0416229 seconds
+Average time insert per record: 0.00416229 seconds
+File successfully deleted
+[root@dhcp207 sqlite_test]# ./sqlite_test 100
+NINSERT: 100
+Opened "filehandle.db" successfully.
+Table created successfully
+Total time for inserting 100 records: 0.442504 seconds
+Average time insert per record: 0.00442504 seconds
+File successfully deleted
+[root@dhcp207 sqlite_test]# ./sqlite_test 1000
+NINSERT: 1000
+Opened "filehandle.db" successfully.
+Table created successfully
+Total time for inserting 1000 records: 4.45597 seconds
+Average time insert per record: 0.00445597 seconds
+File successfully deleted
+[root@dhcp207 sqlite_test]# ./sqlite_test 10000
+NINSERT: 10000
+Opened "filehandle.db" successfully.
+Table created successfully
+Total time for inserting 10000 records: 42.4528 seconds
+Average time insert per record: 0.00424528 seconds
+File successfully deleted
+[root@dhcp207 sqlite_test]# ./sqlite_test 100000
+NINSERT: 100000
+Opened "filehandle.db" successfully.
+Table created successfully
+Total time for inserting 100000 records: 435.661 seconds
+Average time insert per record: 0.00435661 seconds
+File successfully deleted
+[root@dhcp207 sqlite_test]# ./sqlite_test 1000000
+NINSERT: 1000000
+Opened "filehandle.db" successfully.
+Table created successfully
+Total time for inserting 1000000 records: 5059.72 seconds
+Average time insert per record: 0.00505972 seconds
+File successfully deleted
+
