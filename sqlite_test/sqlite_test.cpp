@@ -46,11 +46,13 @@ int main (int argc, char* argv[]) {
     exit(rc);
   } 
  
+
   NINSERT = atoi(argv[1]);
 
   cout << "NINSERT: " << NINSERT << endl;
 
   char database[] = "filehandle.db";
+  cleanup(database);
   rc = sqlite3_open(database, &db);
 
   if (rc) {
@@ -63,17 +65,18 @@ int main (int argc, char* argv[]) {
 		    "ID1 CHAR(16) NOT NULL,"	\
 		    "ID2 CHAR(16) NOT NULL);";
 
+  // open database
   rc = sqlite3_exec(db, sqlStmt, callback, 0, &errMsg);
 
   if (rc != SQLITE_OK) {
     cerr << "SQL ERROR" << endl;
     sqlite3_free(errMsg);
-    cleanup(database);
     exit(rc);
   } else {
     cout << "Table created successfully" << endl;
   }
-  
+
+  // Insert NINSERT records  
    
   for (int i = 0 ; i < NINSERT ; i++) {
     char *id1 = new char[17];
@@ -82,18 +85,18 @@ int main (int argc, char* argv[]) {
     gen_random(id1, 16);
     gen_random(id2, 16);
 
-    char sqlRecordStmt[100] = "INSERT INTO FILEHANDLE(ID1,ID2) VALUES ('";
+    char sqlInsertStmt[100] = "INSERT INTO FILEHANDLE(ID1,ID2) VALUES ('";
     char midStmt[20] =  "','";
     char endStmt[20] = "');";
     
-    strcat(sqlRecordStmt, id1);
-    strcat(sqlRecordStmt, midStmt);
-    strcat(sqlRecordStmt, id2);
-    strcat(sqlRecordStmt, endStmt);
+    strcat(sqlInsertStmt, id1);
+    strcat(sqlInsertStmt, midStmt);
+    strcat(sqlInsertStmt, id2);
+    strcat(sqlInsertStmt, endStmt);
      
     gettimeofday(&start,NULL);
 
-    rc = sqlite3_exec(db, sqlRecordStmt, callback, 0, &errMsg);
+    rc = sqlite3_exec(db, sqlInsertStmt, callback, 0, &errMsg);
 
     gettimeofday(&end,NULL); 
 
@@ -106,7 +109,6 @@ int main (int argc, char* argv[]) {
     if (rc != SQLITE_OK) {
       cerr << "SQL ERROR"  << endl;
       sqlite3_free(errMsg);
-      cleanup(database);
       exit(rc);
     } else {
     //  cout << "Record inserted successfully" << endl;
@@ -122,7 +124,33 @@ int main (int argc, char* argv[]) {
        << totalTime / NINSERT 
        << " seconds" << endl;
 
+  // Delete all records 
+  char sqlDeleteStmt[] = "DELETE FROM FILEHANDLE;";
+  const char *data = "Callback function called"; 
+  gettimeofday(&start,NULL);
+
+  rc = sqlite3_exec(db, sqlDeleteStmt, callback, (void*)data, &errMsg);
+
+  gettimeofday(&end,NULL); 
+
+  if (rc != SQLITE_OK) {
+    cerr << "SQL ERROR"  << endl;
+    sqlite3_free(errMsg);
+    exit(rc);
+  } else {
+    cout << "All records are deleted" << endl;
+  }
+
+  totalTime = (end.tv_sec+(double)end.tv_usec/1000000) -
+     (start.tv_sec+(double)start.tv_usec/1000000);
+
+  cout << "Total time for deleting " << NINSERT << " records: " 
+       << totalTime << " seconds" << endl;
+
+  cout << "Average time delete per record: " 
+       << totalTime / NINSERT 
+       << " seconds" << endl;
+
   sqlite3_close(db);
-  cleanup(database);
   return 0;
 }
