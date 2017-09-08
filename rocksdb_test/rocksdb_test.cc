@@ -28,7 +28,9 @@ int main(int argc, char* argv[]) {
   DB* db;
   Options options;
   struct timeval start,end;
-  long double totalTime = 0;
+  long double totalInsertTime = 0, totalDeleteTime = 0;
+  vector<string> keys;
+
   if (argc != 2) {
     cout << "Usage : ./rocksdb_test <Number of records>" << endl;
     exit(-1);
@@ -59,25 +61,57 @@ int main(int argc, char* argv[]) {
     string key(id1); 
     string value(id2);
 
-    gettimeofday(&start,NULL);
     //cout << key << "|" << value << endl;
-    s = db->Put(WriteOptions(), key, value);
+    WriteOptions woptions = WriteOptions();
+    woptions.sync = true;
+    gettimeofday(&start,NULL);
+    s = db->Put(woptions, key, value);
     gettimeofday(&end,NULL); 
     assert(s.ok());
     double recTime = (end.tv_sec+(double)end.tv_usec/1000000) -
        (start.tv_sec+(double)start.tv_usec/1000000);
-    totalTime +=  recTime;
+    totalInsertTime +=  recTime;
     delete[] id1;
     delete[] id2;
+    keys.push_back(key);
+  }
+
+  for (string key : keys) {
+    string value;
+    s = db->Get(ReadOptions(), key, &value);
+    assert(s.ok());
+
+    WriteOptions woptions = WriteOptions();
+    woptions.sync = true;
+
+    gettimeofday(&start,NULL);
+    s = db->Delete(woptions, key);
+    gettimeofday(&end,NULL);
+ 
+    assert(s.ok());
+
+    double recTime = (end.tv_sec+(double)end.tv_usec/1000000) -
+       (start.tv_sec+(double)start.tv_usec/1000000);
+    totalDeleteTime += recTime;
+
+    s = db->Get(ReadOptions(), key, &value);
+    assert(!s.ok());
   }
 
   cout << "Total time for inserting " << NINSERT << " records: " 
-       << totalTime << " seconds" << endl;
+       << totalInsertTime << " seconds" << endl;
  
   cout << "Average time insert per record: " 
-       << totalTime / NINSERT 
+       << totalInsertTime / NINSERT 
+       << " seconds" << endl;
+
+  cout << "Total time for deleting " << NINSERT << " records: " 
+       << totalDeleteTime << " seconds" << endl;
+ 
+  cout << "Average time delete per record: " 
+       << totalDeleteTime / NINSERT 
        << " seconds" << endl;
   delete db;
-
+  
   return 0;
 }

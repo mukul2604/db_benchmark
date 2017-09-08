@@ -5,6 +5,7 @@
 #include<time.h>
 #include<stdio.h>
 #include<sys/time.h>
+#include<vector>
 using namespace std;
 
 int NINSERT = 0;
@@ -38,8 +39,9 @@ int main (int argc, char* argv[]) {
   sqlite3 *db;
   char *errMsg = 0;
   int rc = 0;
-  long double totalTime = 0;
+  long double totalInsertTime = 0, totalDeleteTime=0;
   struct timeval start,end;
+  vector<char*> keys;
   
   if (argc != 2) {
     cout << "Usage : ./sqlite_test <Number of records>" << endl;
@@ -84,6 +86,7 @@ int main (int argc, char* argv[]) {
   
     gen_random(id1, 16);
     gen_random(id2, 16);
+    keys.push_back(id1);
 
     char sqlInsertStmt[100] = "INSERT INTO FILEHANDLE(ID1,ID2) VALUES ('";
     char midStmt[20] =  "','";
@@ -104,7 +107,7 @@ int main (int argc, char* argv[]) {
        (start.tv_sec+(double)start.tv_usec/1000000);
     
     //cout << "Delta: " << myTime << endl; 
-    totalTime += myTime;;
+    totalInsertTime += myTime;;
     
     if (rc != SQLITE_OK) {
       cerr << "SQL ERROR"  << endl;
@@ -113,42 +116,67 @@ int main (int argc, char* argv[]) {
     } else {
     //  cout << "Record inserted successfully" << endl;
     }
-    delete[] id1;
-    delete[] id2;
   }
   
   cout << "Total time for inserting " << NINSERT << " records: " 
-       << totalTime << " seconds" << endl;
+       << totalInsertTime << " seconds" << endl;
  
   cout << "Average time insert per record: " 
-       << totalTime / NINSERT 
+       << totalInsertTime / NINSERT 
        << " seconds" << endl;
 
-  // Delete all records 
-  char sqlDeleteStmt[] = "DELETE FROM FILEHANDLE;";
-  const char *data = "Callback function called"; 
-  gettimeofday(&start,NULL);
+  { 
+    /*
+    char sqlDeleteStmt[] = "DELETE FROM FILEHANDLE;";
+    const char *data = "Callback function called"; 
+    gettimeofday(&start,NULL);
 
-  rc = sqlite3_exec(db, sqlDeleteStmt, callback, (void*)data, &errMsg);
+    rc = sqlite3_exec(db, sqlDeleteStmt, callback, (void*)data, &errMsg);
 
-  gettimeofday(&end,NULL); 
+    gettimeofday(&end,NULL); 
 
-  if (rc != SQLITE_OK) {
-    cerr << "SQL ERROR"  << endl;
-    sqlite3_free(errMsg);
-    exit(rc);
-  } else {
-    cout << "All records are deleted" << endl;
+    if (rc != SQLITE_OK) {
+      cerr << "SQL ERROR"  << endl;
+      sqlite3_free(errMsg);
+      exit(rc);
+    } else {
+      cout << "All records are deleted" << endl;
+    }
+    */
+  }
+  
+  // Delete all records
+  for (int i = 0; i < keys.size(); i++) {
+    char sqlDeleteStmt[100] = "DELETE FROM FILEHANDLE WHERE ID1='";
+    char last[] = "';";
+    strcat(sqlDeleteStmt, keys[i]);
+    strcat(sqlDeleteStmt, last);
+
+    const char *data = "Callback function called"; 
+    gettimeofday(&start,NULL);
+
+    rc = sqlite3_exec(db, sqlDeleteStmt, callback, (void*)data, &errMsg);
+
+    gettimeofday(&end,NULL);
+ 
+    totalDeleteTime += (end.tv_sec+(double)end.tv_usec/1000000) -
+       (start.tv_sec+(double)start.tv_usec/1000000);
+
+    if (rc != SQLITE_OK) {
+      cerr << "SQL ERROR"  << endl;
+      sqlite3_free(errMsg);
+      exit(rc);
+    } else {
+     // cout << "All records are deleted" << endl;
+    }
   }
 
-  totalTime = (end.tv_sec+(double)end.tv_usec/1000000) -
-     (start.tv_sec+(double)start.tv_usec/1000000);
 
   cout << "Total time for deleting " << NINSERT << " records: " 
-       << totalTime << " seconds" << endl;
+       << totalDeleteTime << " seconds" << endl;
 
   cout << "Average time delete per record: " 
-       << totalTime / NINSERT 
+       << totalDeleteTime / NINSERT 
        << " seconds" << endl;
 
   sqlite3_close(db);
