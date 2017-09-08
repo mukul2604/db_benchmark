@@ -7,7 +7,7 @@
 #include<sys/time.h>
 using namespace std;
 
-int NINSERT = 20000;
+int NINSERT = 0;
 
 void gen_random(char *s, const int len) {
     static const char alphanum[] =
